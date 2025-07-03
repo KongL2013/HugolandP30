@@ -264,8 +264,16 @@ export interface OfflineProgress {
   lastSaveTime: Date;
   offlineCoins: number;
   offlineGems: number;
+  offlineExperience: number;
   offlineTime: number;
   maxOfflineHours: number;
+}
+
+export interface OfflineReward {
+  coins: number;
+  gems: number;
+  experience: number;
+  timeElapsed: number;
 }
 
 export interface GardenOfGrowth {

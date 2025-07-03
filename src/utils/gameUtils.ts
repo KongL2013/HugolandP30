@@ -1,4 +1,4 @@
-import { Weapon, Armor, Enemy, RelicItem } from '../types/game';
+import { Weapon, Armor, Enemy, RelicItem, GameState, OfflineReward } from '../types/game';
 import { getColorblindRarityClass, getRaritySymbol } from './colorblindUtils';
 
 const weaponNames = {
@@ -317,4 +317,80 @@ export const calculateTotalResearchBonuses = (research: { level: number }): { at
 export const calculateDamage = (attack: number, criticalChance: number): number => {
   const isCritical = Math.random() < (criticalChance / 100);
   return isCritical ? Math.floor(attack * 1.5) : attack;
+};
+
+// Calculate offline rewards based on time elapsed and game state
+export const calculateOfflineRewards = (offlineMinutes: number, gameState: GameState): OfflineReward => {
+  // Cap offline time to maximum allowed hours
+  const maxOfflineMinutes = gameState.offlineProgress.maxOfflineHours * 60;
+  const actualOfflineMinutes = Math.min(offlineMinutes, maxOfflineMinutes);
+  
+  // Base rates per minute
+  const baseCoinsPerMinute = 5;
+  const baseGemsPerMinute = 0.1;
+  const baseExperiencePerMinute = 2;
+  
+  // Apply research bonuses
+  const researchBonus = gameState.research.level * 0.1; // 10% bonus per research level
+  const coinMultiplier = 1 + researchBonus;
+  const experienceMultiplier = 1 + researchBonus;
+  
+  // Calculate rewards
+  const coins = Math.floor(baseCoinsPerMinute * actualOfflineMinutes * coinMultiplier);
+  const gems = Math.floor(baseGemsPerMinute * actualOfflineMinutes);
+  const experience = Math.floor(baseExperiencePerMinute * actualOfflineMinutes * experienceMultiplier);
+  
+  return {
+    coins,
+    gems,
+    experience,
+    timeElapsed: actualOfflineMinutes,
+  };
+};
+
+// Get skill description for menu skills
+export const getSkillDescription = (skillType: string): string => {
+  const descriptions = {
+    coin_vacuum: 'Automatically collect coins from defeated enemies',
+    treasurer: 'Instantly gain 500 bonus coins',
+    xp_surge: 'Double experience gain for 24 hours',
+    luck_gem: 'Increased chance to find rare gems',
+    enchanter: 'Higher chance for enchanted items',
+    time_warp: 'Reduce all cooldowns by 50%',
+    golden_touch: 'All items sell for double price',
+    knowledge_boost: 'Gain bonus research points',
+    durability_master: 'Items lose durability 50% slower',
+    relic_finder: 'Increased chance to find relics'
+  };
+  
+  return descriptions[skillType as keyof typeof descriptions] || 'Unknown skill effect';
+};
+
+// Generate a random gem
+export const generateGem = (): any => {
+  const gemTypes = ['Ruby', 'Sapphire', 'Emerald', 'Diamond', 'Topaz'];
+  const gemType = gemTypes[Math.floor(Math.random() * gemTypes.length)];
+  
+  return {
+    id: Math.random().toString(36).substr(2, 9),
+    name: gemType,
+    value: Math.floor(Math.random() * 50) + 10,
+    rarity: 'common'
+  };
+};
+
+// Generate a random relic
+export const generateRelic = (): any => {
+  const isWeapon = Math.random() < 0.5;
+  const names = isWeapon ? relicNames.weapons : relicNames.armor;
+  const name = names[Math.floor(Math.random() * names.length)];
+  
+  return {
+    id: Math.random().toString(36).substr(2, 9),
+    name,
+    type: isWeapon ? 'weapon' : 'armor',
+    power: Math.floor(Math.random() * 100) + 50,
+    level: 1,
+    description: 'A mysterious relic with ancient power'
+  };
 };
